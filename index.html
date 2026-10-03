@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>দোকানের হিসাব</title>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f6f4;--card:#fff;--ink:#17261f;--mut:#667a70;--line:#dbe5df;--pri:#0f6b4b;--pri2:#e8f4ee;--red:#c0392b;--amb:#b7791f}
+:root[data-theme=dark]{--bg:#0f1713;--card:#17231d;--ink:#e6f0ea;--mut:#8da498;--line:#27382f;--pri:#3ecf94;--pri2:#1b3027;--red:#ff7b6b;--amb:#f0b64d}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Hind Siliguri',system-ui,sans-serif;font-size:15px}
+header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px 18px;background:var(--card);border-bottom:1px solid var(--line)}
+h1{font-size:20px;margin:0}
+h3{margin:0 0 10px;font-size:16px}
+button,input,select{font:inherit;color:inherit}
+button{border:1px solid var(--line);background:var(--card);padding:7px 13px;border-radius:8px;cursor:pointer}
+button:hover{background:var(--pri2)}
+button.p{background:var(--pri);border-color:var(--pri);color:#fff;font-weight:600}
+button.d{color:var(--red)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--pri)}
+nav{display:flex;gap:4px;padding:8px 18px;background:var(--card);border-bottom:1px solid var(--line);overflow-x:auto;position:sticky;top:0;z-index:5}
+nav button{border:0;background:none;font-weight:600;color:var(--mut);white-space:nowrap}
+nav button.on{background:var(--pri2);color:var(--pri)}
+main{max-width:1200px;margin:0 auto;padding:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
+.st small{color:var(--mut)}.st b{display:block;font-size:22px}
+.st.m{background:var(--pri);border-color:var(--pri);color:#fff}.st.m small{color:#d4efe3}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.tools input,.tools select,.fm input,.fm select{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);width:100%}
+.tools input{flex:1;min-width:150px;width:auto}.tools select{width:auto}
+.wrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:10px}
+table{width:100%;border-collapse:collapse;min-width:760px}
+th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{background:var(--pri2)}
+.n{text-align:right}
+tr:last-child td{border-bottom:0}
+.tag{padding:2px 9px;border-radius:99px;font-size:13px;font-weight:600}
+.ok{background:var(--pri2);color:var(--pri)}.low{background:rgba(183,121,31,.15);color:var(--amb)}.out{background:rgba(192,57,43,.14);color:var(--red)}
+.pos{color:var(--pri)}.neg{color:var(--red)}
+.act button{padding:3px 8px;font-size:13px;margin-right:3px}
+.empty{padding:28px;text-align:center;color:var(--mut)}
+.fm{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fm label{display:flex;flex-direction:column;gap:3px;font-size:13px;color:var(--mut)}
+.fm .w{grid-column:1/-1}
+.fb{grid-column:1/-1;display:flex;gap:8px;justify-content:flex-end}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);width:min(460px,94vw);padding:18px}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+.sum{display:flex;justify-content:space-between;padding:5px 0}
+.sum.big{font-size:19px;font-weight:700;border-top:1px solid var(--line);margin-top:6px;padding-top:9px}
+.bars{display:flex;align-items:flex-end;gap:8px;height:140px}
+.bars div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;font-size:12px;color:var(--mut)}
+.bars i{display:block;width:100%;background:var(--pri);border-radius:5px 5px 0 0;min-height:2px}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
+#toast.s{opacity:1}
+@media print{header,nav,.act,.tools{display:none}}
+</style>
+</head>
+<body>
+<header>
+  <h1>দোকানের হিসাব</h1>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button data-a="csv">CSV</button><button data-a="bk">ব্যাকআপ</button><button data-a="rs">রিস্টোর</button><button data-a="theme">🌓</button>
+    <input type="file" id="file" accept=".json" hidden>
+  </div>
+</header>
+<nav id="nav">
+  <button data-t="dash" class="on">ড্যাশবোর্ড</button><button data-t="prod">পণ্য ও স্টক</button>
+  <button data-t="sale">নতুন বিক্রি</button><button data-t="hist">বিক্রির ইতিহাস</button>
+</nav>
+<main id="view"></main>
+
+<dialog id="dlg"><form class="fm" id="pf" method="dialog"><h3 class="w" id="pt">নতুন পণ্য</h3>
+  <label class="w">পণ্যের নাম<input id="p_name" required></label>
+  <label>একক<select id="p_unit"><option>কেজি</option><option>পিস</option></select></label>
+  <label>কম স্টক সীমা<input id="p_min" type="number" min="0" step="any" value="5"></label>
+  <label>ক্রয়মূল্য (প্রতি একক)<input id="p_buy" type="number" min="0" step="any" required></label>
+  <label>বিক্রয়মূল্য (প্রতি একক)<input id="p_sell" type="number" min="0" step="any" required></label>
+  <label class="w" id="p_stl">বর্তমান স্টক<input id="p_stock" type="number" min="0" step="any" value="0" required></label>
+  <div class="fb"><button type="button" data-a="close">বাতিল</button><button class="p">সংরক্ষণ</button></div></form></dialog>
+
+<dialog id="sdlg"><form class="fm" id="sf" method="dialog"><h3 class="w" id="s_t">স্টক যোগ</h3>
+  <label>পরিমাণ<input id="s_q" type="number" min="0" step="any" required></label>
+  <label>নতুন ক্রয়মূল্য (প্রতি একক)<input id="s_b" type="number" min="0" step="any" required></label>
+  <p class="w" style="margin:0;font-size:13px;color:var(--mut)">গড় ক্রয়মূল্য স্বয়ংক্রিয় হিসাব হবে।</p>
+  <div class="fb"><button type="button" data-a="close">বাতিল</button><button class="p">স্টক যোগ করুন</button></div></form></dialog>
+<div id="toast"></div>
+
+<script>
+(function(){
+const KEY='dokan_v2';
+let D={products:[],sales:[]},tab='dash',editId=null,stockId=null,cart=[],q='',flt='all';
+const $=id=>document.getElementById(id);
+try{const x=JSON.parse(localStorage.getItem(KEY));if(x&&x.products)D=x}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){toast('সংরক্ষণ করা যায়নি')}};
+const bn=n=>Number(n||0).toLocaleString('bn-BD',{maximumFractionDigits:2});
+const tk=n=>'৳ '+bn(n);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+const day=d=>new Date(d).toLocaleDateString('en-CA');
+const P=id=>D.products.find(p=>p.id===id);
+function toast(m){const t=$('toast');t.textContent=m;t.className='s';setTimeout(()=>t.className='',1800)}
+function stat(p){return p.stock<=0?['out','স্টক শেষ']:p.stock<=p.min?['low','কম স্টক']:['ok','পর্যাপ্ত']}
+const sold=id=>D.sales.reduce((s,x)=>s+x.lines.filter(l=>l.pid===id).reduce((a,l)=>a+l.qty,0),0);
+const profitOf=s=>s.lines.reduce((a,l)=>a+l.qty*(l.price-l.buy),0)-(s.discount||0);
+const totalOf=s=>s.lines.reduce((a,l)=>a+l.qty*l.price,0)-(s.discount||0);
+
+function dash(){
+  const rev=D.sales.reduce((s,x)=>s+totalOf(x),0),pr=D.sales.reduce((s,x)=>s+profitOf(x),0);
+  const due=D.sales.reduce((s,x)=>s+Math.max(totalOf(x)-x.paid,0),0);
+  const inv=D.products.reduce((s,p)=>s+p.stock*p.buy,0);
+  const lows=D.products.filter(p=>p.stock<=p.min);
+  const days=[...Array(7)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);return day(d)});
+  const vals=days.map(d=>D.sales.filter(s=>day(s.date)===d).reduce((a,s)=>a+totalOf(s),0));
+  const mx=Math.max(...vals,1);
+  return `<div class="grid">
+   <div class="card st m"><small>মোট লাভ</small><b>${tk(pr)}</b></div>
+   <div class="card st"><small>মোট বিক্রি</small><b>${tk(rev)}</b></div>
+   <div class="card st"><small>বাকি (পাওনা)</small><b>${tk(due)}</b></div>
+   <div class="card st"><small>স্টকের মূল্য</small><b>${tk(inv)}</b></div>
+   <div class="card st"><small>পণ্য সংখ্যা</small><b>${bn(D.products.length)}</b></div></div>
+  <div class="two"><div class="card"><h3>গত ৭ দিনের বিক্রি</h3><div class="bars">${vals.map((v,i)=>`<div><span>${v?bn(v):''}</span><i style="height:${v/mx*100}%"></i><span>${days[i].slice(8)}</span></div>`).join('')}</div></div>
+  <div class="card"><h3>কম স্টকের পণ্য</h3>${lows.length?lows.map(p=>`<div class="sum"><span>${esc(p.name)}</span><span class="tag ${stat(p)[0]}">${bn(p.stock)} ${p.unit}</span></div>`).join(''):'<div class="empty">সব পণ্যের স্টক পর্যাপ্ত</div>'}</div></div>`;
+}
+function prod(){
+  let L=D.products.map((p,i)=>({...p,sl:i+1}));
+  L=L.filter(p=>(!q||p.name.toLowerCase().includes(q.toLowerCase())||String(p.sl)===q)&&(flt==='all'||(flt==='out'&&p.stock<=0)||(flt==='low'&&p.stock>0&&p.stock<=p.min)));
+  return `<div class="tools"><button class="p" data-a="addp">+ নতুন পণ্য</button><input id="q" type="search" placeholder="নাম বা ক্রমিক নম্বর খুঁজুন" value="${esc(q)}">
+   <select id="flt"><option value="all">সব</option><option value="low"${flt==='low'?' selected':''}>কম স্টক</option><option value="out"${flt==='out'?' selected':''}>স্টক শেষ</option></select></div>
+   <div class="wrap"><table><thead><tr><th>ক্রমিক</th><th>নাম</th><th>একক</th><th class="n">ক্রয়মূল্য</th><th class="n">বিক্রয়মূল্য</th><th class="n">বিক্রি হয়েছে</th><th class="n">স্টক</th><th class="n">স্টক মূল্য</th><th>অবস্থা</th><th>কাজ</th></tr></thead><tbody>
+   ${L.map(p=>`<tr><td>${bn(p.sl)}</td><td><b>${esc(p.name)}</b></td><td>${p.unit}</td><td class="n">${tk(p.buy)}</td><td class="n">${tk(p.sell)}</td><td class="n">${bn(sold(p.id))}</td><td class="n"><b>${bn(p.stock)}</b></td><td class="n">${tk(p.stock*p.buy)}</td>
+   <td><span class="tag ${stat(p)[0]}">${stat(p)[1]}</span></td>
+   <td class="act"><button data-a="addstock" data-id="${p.id}">+স্টক</button><button data-a="editp" data-id="${p.id}">সম্পাদনা</button><button class="d" data-a="delp" data-id="${p.id}">মুছুন</button></td></tr>`).join('')}
+   </tbody></table>${L.length?'':'<div class="empty">কোনো পণ্য পাওয়া যায়নি</div>'}</div>`;
+}
+function sale(){
+  const opts=D.products.filter(p=>p.stock>0).map(p=>`<option value="${p.id}">${esc(p.name)} (স্টক ${bn(p.stock)} ${p.unit})</option>`).join('');
+  const sub=cart.reduce((s,l)=>s+l.qty*l.price,0);
+  return `<div class="two"><div class="card fm"><h3 class="w">পণ্য যোগ করুন</h3>
+   <label class="w">পণ্য<select id="c_p"><option value="">-- বেছে নিন --</option>${opts}</select></label>
+   <label>পরিমাণ<input id="c_q" type="number" min="0" step="any" value="1"></label>
+   <label>একক দাম<input id="c_pr" type="number" min="0" step="any"></label>
+   <div class="fb"><button class="p" data-a="addcart">তালিকায় যোগ</button></div></div>
+   <div class="card"><h3>বিক্রির তালিকা</h3>
+   ${cart.length?cart.map((l,i)=>`<div class="sum"><span>${esc(l.name)} × ${bn(l.qty)} ${l.unit}</span><span>${tk(l.qty*l.price)} <button class="d act" data-a="rmcart" data-i="${i}">✕</button></span></div>`).join(''):'<div class="empty">কিছু যোগ করা হয়নি</div>'}
+   <div class="sum"><span>উপমোট</span><span>${tk(sub)}</span></div>
+   <div class="fm" style="margin:8px 0"><label>ছাড়<input id="c_d" type="number" min="0" step="any" value="${cart.disc||0}"></label><label>নগদ পেয়েছি<input id="c_paid" type="number" min="0" step="any" placeholder="খালি = পুরো"></label><label class="w">ক্রেতার নাম (ঐচ্ছিক)<input id="c_c"></label></div>
+   <div class="sum big"><span>মোট</span><span id="c_tot">${tk(sub-(cart.disc||0))}</span></div>
+   <div class="sum"><span>বাকি</span><span id="c_due" class="neg">${tk(0)}</span></div>
+   <button class="p" style="width:100%;margin-top:8px" data-a="done">বিক্রি সম্পন্ন করুন</button></div></div>`;
+}
+function hist(){
+  const S=[...D.sales].reverse();
+  return `<div class="wrap"><table><thead><tr><th>তারিখ</th><th>ক্রেতা</th><th>পণ্য</th><th class="n">মোট</th><th class="n">পেয়েছি</th><th class="n">বাকি</th><th class="n">লাভ</th><th>কাজ</th></tr></thead><tbody>
+  ${S.map(s=>{const t=totalOf(s),pf=profitOf(s);return `<tr><td>${new Date(s.date).toLocaleString('bn-BD',{dateStyle:'short',timeStyle:'short'})}</td><td>${esc(s.customer||'-')}</td><td>${s.lines.map(l=>esc(l.name)+' '+bn(l.qty)).join(', ')}</td><td class="n">${tk(t)}</td><td class="n">${tk(s.paid)}</td><td class="n ${t>s.paid?'neg':''}">${tk(Math.max(t-s.paid,0))}</td><td class="n ${pf>=0?'pos':'neg'}">${tk(pf)}</td>
+  <td class="act"><button data-a="pay" data-id="${s.id}" ${t>s.paid?'':'disabled'}>বাকি নিলাম</button><button class="d" data-a="delsale" data-id="${s.id}">বাতিল</button></td></tr>`}).join('')}
+  </tbody></table>${S.length?'':'<div class="empty">এখনো কোনো বিক্রি হয়নি</div>'}</div>`;
+}
+function render(){
+  $('view').innerHTML={dash,prod,sale,hist}[tab]();
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
+}
+function calc(){const sub=cart.reduce((s,l)=>s+l.qty*l.price,0),d=+($('c_d')||{}).value||0,tot=Math.max(sub-d,0);
+  cart.disc=d;const pv=$('c_paid').value,paid=pv===''?tot:+pv;
+  $('c_tot').textContent=tk(tot);$('c_due').textContent=tk(Math.max(tot-paid,0))}
+
+document.addEventListener('click',e=>{
+  const n=e.target.closest('#nav button');if(n){tab=n.dataset.t;render();return}
+  const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,id=b.dataset.id;
+  if(a==='close'){$('dlg').close();$('sdlg').close()}
+  else if(a==='addp'){editId=null;$('pf').reset();$('pt').textContent='নতুন পণ্য';$('p_stl').firstChild.textContent='প্রারম্ভিক স্টক';$('dlg').showModal()}
+  else if(a==='editp'){const p=P(id);editId=id;$('p_name').value=p.name;$('p_unit').value=p.unit;$('p_min').value=p.min;$('p_buy').value=p.buy;$('p_sell').value=p.sell;$('p_stock').value=p.stock;$('pt').textContent='পণ্য সম্পাদনা';$('p_stl').firstChild.textContent='বর্তমান স্টক';$('dlg').showModal()}
+  else if(a==='delp'){if(confirm('পণ্যটি মুছে ফেলবেন?')){D.products=D.products.filter(p=>p.id!==id);save();render()}}
+  else if(a==='addstock'){stockId=id;const p=P(id);$('s_t').textContent='স্টক যোগ: '+p.name;$('s_q').value='';$('s_b').value=p.buy;$('sdlg').showModal()}
+  else if(a==='addcart'){const p=P($('c_p').value),qty=+$('c_q').value,pr=+$('c_pr').value;
+    if(!p||qty<=0)return toast('পণ্য ও পরিমাণ দিন');
+    const used=cart.filter(l=>l.pid===p.id).reduce((s,l)=>s+l.qty,0);
+    if(used+qty>p.stock)return toast('স্টক আছে মাত্র '+bn(p.stock-used)+' '+p.unit);
+    cart.push({pid:p.id,name:p.name,unit:p.unit,qty,price:pr||p.sell,buy:p.buy});render()}
+  else if(a==='rmcart'){cart.splice(+b.dataset.i,1);render()}
+  else if(a==='done'){if(!cart.length)return toast('তালিকা খালি');
+    const d=+$('c_d').value||0,sub=cart.reduce((s,l)=>s+l.qty*l.price,0),tot=Math.max(sub-d,0),pv=$('c_paid').value;
+    cart.forEach(l=>{P(l.pid).stock-=l.qty});
+    D.sales.push({id:uid(),date:Date.now(),customer:$('c_c').value.trim(),lines:cart,discount:d,paid:pv===''?tot:Math.min(+pv,tot)});
+    cart=[];save();tab='hist';render();toast('বিক্রি সংরক্ষিত')}
+  else if(a==='pay'){const s=D.sales.find(x=>x.id===id),due=totalOf(s)-s.paid,v=prompt('বাকি '+bn(due)+' টাকা। কত পেলেন?',due);
+    if(v&&+v>0){s.paid=Math.min(s.paid+ +v,totalOf(s));save();render()}}
+  else if(a==='delsale'){if(confirm('বিক্রি বাতিল করলে স্টক ফেরত যাবে। নিশ্চিত?')){const s=D.sales.find(x=>x.id===id);
+    s.lines.forEach(l=>{const p=P(l.pid);if(p)p.stock+=l.qty});D.sales=D.sales.filter(x=>x.id!==id);save();render()}}
+  else if(a==='theme'){const r=document.documentElement;r.dataset.theme=r.dataset.theme==='dark'?'light':'dark'}
+  else if(a==='bk'){dl('dokan-backup.json',JSON.stringify(D),'application/json')}
+  else if(a==='rs'){$('file').click()}
+  else if(a==='csv'){const r=D.products.map((p,i)=>[i+1,'"'+p.name.replace(/"/g,'""')+'"',p.unit,p.buy,p.sell,sold(p.id),p.stock].join(','));
+    dl('hisab.csv','\ufeff'+['ক্রমিক,নাম,একক,ক্রয়মূল্য,বিক্রয়মূল্য,বিক্রি,স্টক',...r].join('\n'),'text/csv')}
+});
+document.addEventListener('input',e=>{
+  if(e.target.id==='q'){q=e.target.value;const p=e.target.selectionStart;render();const i=$('q');i.focus();i.setSelectionRange(p,p)}
+  else if(e.target.id==='c_d'||e.target.id==='c_paid')calc();
+});
+document.addEventListener('change',e=>{
+  if(e.target.id==='flt'){flt=e.target.value;render()}
+  else if(e.target.id==='c_p'){const p=P(e.target.value);$('c_pr').value=p?p.sell:''}
+});
+$('pf').addEventListener('submit',()=>{
+  const d={name:$('p_name').value.trim(),unit:$('p_unit').value,min:+$('p_min').value,buy:+$('p_buy').value,sell:+$('p_sell').value,stock:+$('p_stock').value};
+  if(editId)Object.assign(P(editId),d);else D.products.push({id:uid(),...d});
+  save();render();toast('সংরক্ষিত')});
+$('sf').addEventListener('submit',()=>{
+  const p=P(stockId),qty=+$('s_q').value,nb=+$('s_b').value;
+  p.buy=(p.stock*p.buy+qty*nb)/((p.stock+qty)||1);p.stock+=qty;save();render();toast('স্টক যোগ হয়েছে')});
+$('file').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.products||!x.sales)throw 0;D=x;save();render();toast('রিস্টোর সম্পন্ন')}catch(z){toast('ফাইলটি সঠিক নয়')}};r.readAsText(f)});
+function dl(n,t,m){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:m}));a.download=n;a.click()}
+render();
+})();
+</script>
+</body>
+</html>
